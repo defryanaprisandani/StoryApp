@@ -55,11 +55,15 @@ class UserRepository private constructor(
             val response = apiService.addStories(fixedToken, file, description)
             emit(Result.Success(response))
         } catch (e: Exception) {
-            emit(Result.Error(e.message.toString()))
+            if (e.message?.contains("payload") == true) {
+                emit(Result.Error("Payload terlalu besar. Coba kurangi ukuran gambar."))
+            } else {
+                emit(Result.Error(e.message.toString()))
+            }
         }
     }
 
-    fun getStories(): LiveData<PagingData<ListStoryItem>> {
+    fun getStories(): Flow<PagingData<ListStoryItem>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 5
@@ -70,7 +74,7 @@ class UserRepository private constructor(
                     "Bearer ${runBlocking { getSession().first().token }}"
                 )
             }
-        ).liveData
+        ).flow
     }
 
     fun getStoriesWithLocation(): LiveData<Result<StoryResponse>> = liveData {
@@ -107,3 +111,4 @@ class UserRepository private constructor(
             }.also { instance = it }
     }
 }
+

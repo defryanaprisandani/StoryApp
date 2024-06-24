@@ -1,7 +1,7 @@
 package com.dicoding.picodiploma.loginwithanimation.view.main
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.paging.AsyncPagingDataDiffer
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
@@ -14,9 +14,9 @@ import com.dicoding.picodiploma.loginwithanimation.adapter.StoryAdapter
 import com.dicoding.picodiploma.loginwithanimation.data.UserRepository
 import com.dicoding.picodiploma.loginwithanimation.data.retrorfit.remote.ListStoryItem
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,24 +39,21 @@ class MainViewModelTest {
     @Mock
     private lateinit var repository: UserRepository
 
-    private val storyList = DataDummy.generateStoryList()
+    @Mock
+    private lateinit var savedStateHandle: SavedStateHandle
 
-    @Before
-    fun setUp() {
-        mainViewModel = MainViewModel(repository)
-    }
+    private val storyList = DataDummy.generateStoryList()
 
     @Test
     fun `successfully Get Stories & Not Null`() = runTest {
         val dataSource = PageTestDataSource.snapshot(storyList)
-        val listStory = MutableLiveData<PagingData<ListStoryItem>>()
-        listStory.value = dataSource
+        val flowStory = flowOf(PagingData.from(storyList))
 
-        Mockito.`when`(repository.getStories()).thenReturn(listStory)
-
+        Mockito.`when`(repository.getStories()).thenReturn(flowStory)
+        mainViewModel = MainViewModel(repository)
         val actualStories = mainViewModel.storyList.getOrAwaitValue()
 
-        assertNotNull(actualStories) // Ensure the LiveData is not null
+        assertNotNull(actualStories)
 
         val differ = AsyncPagingDataDiffer(
             diffCallback = StoryAdapter.DIFF_CALLBACK,
@@ -76,16 +73,13 @@ class MainViewModelTest {
     @Test
     fun `failed to Get Stories but Not Null`() = runTest {
         val emptyStoryList: MutableList<ListStoryItem> = mutableListOf()
-        val dataSource = PageTestDataSource.snapshot(emptyStoryList)
+        val flowStory = flowOf(PagingData.from(emptyStoryList))
 
-        val listStory = MutableLiveData<PagingData<ListStoryItem>>()
-        listStory.value = dataSource
-
-        Mockito.`when`(repository.getStories()).thenReturn(listStory)
-
+        Mockito.`when`(repository.getStories()).thenReturn(flowStory)
+        mainViewModel = MainViewModel(repository)
         val actualStories = mainViewModel.storyList.getOrAwaitValue()
 
-        assertNotNull(actualStories) // Ensure the LiveData is not null
+        assertNotNull(actualStories)
 
         val differ = AsyncPagingDataDiffer(
             diffCallback = StoryAdapter.DIFF_CALLBACK,

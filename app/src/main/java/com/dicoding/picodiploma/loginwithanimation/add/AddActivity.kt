@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.dicoding.picodiploma.loginwithanimation.R
 import com.dicoding.picodiploma.loginwithanimation.data.retrorfit.Result
@@ -22,6 +23,8 @@ import com.dicoding.picodiploma.loginwithanimation.data.retrorfit.uriToFile
 import com.dicoding.picodiploma.loginwithanimation.databinding.ActivityAddBinding
 import com.dicoding.picodiploma.loginwithanimation.view.ViewModelFactory
 import com.dicoding.picodiploma.loginwithanimation.view.main.MainActivity
+import id.zelory.compressor.Compressor
+import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -108,42 +111,53 @@ class AddActivity : AppCompatActivity() {
     private fun uploadImage() {
         currentImageUri?.let { uri ->
             val imageFile = uriToFile(uri, this)
-            Log.d("Image File", "showImage: ${imageFile.path}")
 
-            val desc = binding.descEditText.text.toString()
-            val requestBody = desc.toRequestBody("text/plain".toMediaType())
-            val requestImageFile = imageFile.asRequestBody("image/jpeg".toMediaType())
-            val multipartBody = MultipartBody.Part.createFormData(
-                "photo",
-                imageFile.name,
-                requestImageFile
-            )
+            // Compress the image file
+            lifecycleScope.launch {
+                val compressedImageFile = Compressor.compress(this@AddActivity, imageFile)
 
-            viewModel.addStory(multipartBody, requestBody).observe(this) { result ->
-                when (result) {
-                    is Result.Loading -> {
-                        binding.progressBar.isVisible = true
+                Log.d("Image File", "Compressed Image: ${compressedImageFile.path}")
+
+                val desc = binding.descEditText.text.toString()
+                if (desc.isEmpty()) {
+                    showAlertDialog("Warning", "Description cannot be empty.")
+                    return@launch
+                }
+
+                val requestBody = desc.toRequestBody("text/plain".toMediaType())
+                val requestImageFile = compressedImageFile.asRequestBody("image/jpeg".toMediaType())
+                val multipartBody = MultipartBody.Part.createFormData(
+                    "photo",
+                    compressedImageFile.name,
+                    requestImageFile
+                )
+
+                viewModel.addStory(multipartBody, requestBody).observe(this@AddActivity) { result ->
+                    when (result) {
+                        is Result.Loading -> {
+                            binding.progressBar.isVisible = true
+                        }
+
+                        is Result.Success<*> -> {
+                            viewModel.responseLiveData.postValue(true)
+                        }
+
+                        is Result.Error -> {
+                            viewModel.responseLiveData.postValue(false)
+                        }
                     }
+                }
 
-                    is Result.Success<*> -> {
-                        viewModel.responseLiveData.postValue(true)
-                    }
-
-                    is Result.Error -> {
-                        viewModel.responseLiveData.postValue(false)
+                viewModel.responseLiveData.observe(this@AddActivity) { isSuccess ->
+                    binding.progressBar.isVisible = false
+                    if (isSuccess) {
+                        showAlertDialog("Success", "Data sent successfully.")
+                    } else {
+                        showAlertDialog("Failed", "Failed to send data.")
                     }
                 }
             }
-
-            viewModel.responseLiveData.observe(this) { isSuccess ->
-                binding.progressBar.isVisible = false
-                if (isSuccess) {
-                    showAlertDialog("Success", "Data sent successfully.")
-                } else {
-                    showAlertDialog("Failed", "Failed to send data.")
-                }
-            }
-        } ?: showToast("warning")
+        } ?: showToast("Image cannot be empty")
     }
 
     private fun showToast(message: String) {

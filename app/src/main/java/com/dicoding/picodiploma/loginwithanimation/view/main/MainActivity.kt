@@ -92,7 +92,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupObserver() {
         viewModel.storyList.observe(this) { pagingData ->
-            adapter.submitData(lifecycle, pagingData)
+            pagingData?.let {
+                adapter.submitData(lifecycle, it)
+            }
         }
     }
 }

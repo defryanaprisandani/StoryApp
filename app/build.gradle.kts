@@ -16,6 +16,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testOptions.unitTests.isReturnDefaultValues = true
     }
 
     buildTypes {
@@ -71,5 +72,9 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testImplementation("org.mockito:mockito-core:4.0.0")
     testImplementation("org.mockito:mockito-inline:4.0.0")
+
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-savedstate:2.8.2")
+
+    implementation ("id.zelory:compressor:3.0.1")
 
 }
