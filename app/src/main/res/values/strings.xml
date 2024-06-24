@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">App Story </string>
+    <string name="login">Masuk</string>
+    <string name="message_welcome_page">Ingin melihat keseruan semua story dari anggotanya?</string>
+    <string name="title_welcome_page">Selamat datang di aplikasi story Dicoding</string>
+    <string name="title_signup_page">Lengkapi data dirimu di bawah ini ya</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="message_login_page">Masukkan dulu datamu ya</string>
+    <string name="title_login_page">Sudah siap untuk melihat story yang menarik dan lucu?</string>
+    <string name="name">Nama</string>
+    <string name="message_main_page">Selamat Belajar di Dicoding.</string>
+    <string name="greeting">Halo %1$s,</string>
+    <string name="logout">Keluar</string>
+    <string name="email_invalid">Format email tidak valid!</string>
+    <string name="login_succeed">Selamat Anda Berhasil Login</string>
+    <string name="gallery">Galeri</string>
+    <string name="camera">Camera</string>
+    <string name="upload">Upload</string>
+    <string name="description">Description</string>
+    <string name="add_story">Add Story</string>
+    <string name="logout_confirm">Konfirmasi Logout</string>
+    <string name="logout_text">Logout Teks</string>
+    <string name="no_text">No Next</string>
+    <string name="retry">Coba lagi</string>
+    <string name="password_error_message">Password minimal harus 8 karakter</string>
+    <string name="email_error_message">Email tidak valid</string>
+    <string name="signup_succeed">Pendaftaran berhasil!</string>
+    <string name="continue_text">Lanjut</string>
+    <string name="signup">Daftar</string>
+    <string name="error_login">Terjadi kesalahan saat login</string>
+    <string name="lessfrom8">Kurang dari 8 karakter</string>
+    <string name="title_activity_maps">MapsActivity</string>
+    <string name="map">map</string>
+</resources>
