@@ -29,6 +29,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.FileNotFoundException
 
 class AddActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAddBinding
@@ -110,52 +111,55 @@ class AddActivity : AppCompatActivity() {
 
     private fun uploadImage() {
         currentImageUri?.let { uri ->
-            val imageFile = uriToFile(uri, this)
+            try {
+                val imageFile = uriToFile(uri, this)
 
-            // Compress the image file
-            lifecycleScope.launch {
-                val compressedImageFile = Compressor.compress(this@AddActivity, imageFile)
+                lifecycleScope.launch {
+                    val compressedImageFile = Compressor.compress(this@AddActivity, imageFile)
 
-                Log.d("Image File", "Compressed Image: ${compressedImageFile.path}")
+                    Log.d("Image File", "Compressed Image: ${compressedImageFile.path}")
 
-                val desc = binding.descEditText.text.toString()
-                if (desc.isEmpty()) {
-                    showAlertDialog("Warning", "Description cannot be empty.")
-                    return@launch
-                }
+                    val desc = binding.descEditText.text.toString()
+                    if (desc.isEmpty()) {
+                        showToast("Description cannot be empty")
+                        return@launch
+                    }
 
-                val requestBody = desc.toRequestBody("text/plain".toMediaType())
-                val requestImageFile = compressedImageFile.asRequestBody("image/jpeg".toMediaType())
-                val multipartBody = MultipartBody.Part.createFormData(
-                    "photo",
-                    compressedImageFile.name,
-                    requestImageFile
-                )
+                    val requestBody = desc.toRequestBody("text/plain".toMediaType())
+                    val requestImageFile = compressedImageFile.asRequestBody("image/jpeg".toMediaType())
+                    val multipartBody = MultipartBody.Part.createFormData(
+                        "photo",
+                        compressedImageFile.name,
+                        requestImageFile
+                    )
 
-                viewModel.addStory(multipartBody, requestBody).observe(this@AddActivity) { result ->
-                    when (result) {
-                        is Result.Loading -> {
-                            binding.progressBar.isVisible = true
+                    viewModel.addStory(multipartBody, requestBody).observe(this@AddActivity) { result ->
+                        when (result) {
+                            is Result.Loading -> {
+                                binding.progressBar.isVisible = true
+                            }
+
+                            is Result.Success<*> -> {
+                                viewModel.responseLiveData.postValue(true)
+                            }
+
+                            is Result.Error -> {
+                                viewModel.responseLiveData.postValue(false)
+                            }
                         }
+                    }
 
-                        is Result.Success<*> -> {
-                            viewModel.responseLiveData.postValue(true)
-                        }
-
-                        is Result.Error -> {
-                            viewModel.responseLiveData.postValue(false)
+                    viewModel.responseLiveData.observe(this@AddActivity) { isSuccess ->
+                        binding.progressBar.isVisible = false
+                        if (isSuccess) {
+                            showAlertDialog("Success", "Data sent successfully.")
+                        } else {
+                            showAlertDialog("Failed", "Failed to send data.")
                         }
                     }
                 }
-
-                viewModel.responseLiveData.observe(this@AddActivity) { isSuccess ->
-                    binding.progressBar.isVisible = false
-                    if (isSuccess) {
-                        showAlertDialog("Success", "Data sent successfully.")
-                    } else {
-                        showAlertDialog("Failed", "Failed to send data.")
-                    }
-                }
+            } catch (e: FileNotFoundException) {
+                showToast("Image file not found")
             }
         } ?: showToast("Image cannot be empty")
     }
