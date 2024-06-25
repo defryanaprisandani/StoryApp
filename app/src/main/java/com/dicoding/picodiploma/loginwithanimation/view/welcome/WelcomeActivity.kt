@@ -9,21 +9,38 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.dicoding.picodiploma.loginwithanimation.databinding.ActivityWelcomeBinding
 import com.dicoding.picodiploma.loginwithanimation.view.login.LoginActivity
+import com.dicoding.picodiploma.loginwithanimation.view.main.MainActivity
 import com.dicoding.picodiploma.loginwithanimation.view.signup.SignupActivity
+import com.dicoding.picodiploma.loginwithanimation.data.pref.UserPreference
+import com.dicoding.picodiploma.loginwithanimation.data.pref.dataStore
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class WelcomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWelcomeBinding
+    private lateinit var userPreference: UserPreference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityWelcomeBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
-        setupView()
-        setupAction()
-        playAnimation()
+        userPreference = UserPreference.getInstance(dataStore)
+
+        lifecycleScope.launch {
+            val isLoggedIn = userPreference.isLoggedIn().first()
+            if (isLoggedIn) {
+                startActivity(Intent(this@WelcomeActivity, MainActivity::class.java))
+                finish()
+            } else {
+                binding = ActivityWelcomeBinding.inflate(layoutInflater)
+                setContentView(binding.root)
+                setupView()
+                setupAction()
+                playAnimation()
+            }
+        }
     }
 
     private fun setupView() {
